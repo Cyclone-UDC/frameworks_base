@@ -12123,6 +12123,12 @@ public final class Settings {
         @Readable
         public static final String QSTILE_REQUIRES_UNLOCKING = "qstile_requires_unlocking";
 
+	/**
+         * Immersive Navigation gesture
+         * @hide
+         */
+        public static final String IMMERSIVE_NAVIGATION = "immersive_navigation";
+
         /**
          * These entries are considered common between the personal and the managed profile,
          * since the managed profile doesn't get to change them.
