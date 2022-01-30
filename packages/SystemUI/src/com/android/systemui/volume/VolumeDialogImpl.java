@@ -1734,6 +1734,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                         mExpandRows.setExpanded(mExpanded);
                     }
                     mAnimatingRows = 0;
+                    mDefaultRow = null;
                     mIsAnimatingDismiss = false;
 
                     hideRingerDrawer();
