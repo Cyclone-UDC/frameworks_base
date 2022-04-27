@@ -35,6 +35,7 @@ import static com.android.systemui.theme.ThemeOverlayApplier.OVERLAY_COLOR_SOURC
 import static com.android.systemui.theme.ThemeOverlayApplier.TIMESTAMP_FIELD;
 
 import android.app.UiModeManager;
+import com.android.systemui.util.settings.SystemSettings;
 import android.app.WallpaperColors;
 import android.app.WallpaperManager;
 import android.app.WallpaperManager.OnColorsChangedListener;
@@ -141,6 +142,7 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
     private final UserTracker mUserTracker;
     private final DeviceProvisionedController mDeviceProvisionedController;
     private final Resources mResources;
+    private final SystemSettings mSystemSettings;
     // Current wallpaper colors associated to a user.
     private final SparseArray<WallpaperColors> mCurrentColors = new SparseArray<>();
     private final WallpaperManager mWallpaperManager;
@@ -402,6 +404,7 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
             @Main Executor mainExecutor,
             @Background Executor bgExecutor,
             ThemeOverlayApplier themeOverlayApplier,
+            SystemSettings systemSettings,
             SecureSettings secureSettings,
             WallpaperManager wallpaperManager,
             UserManager userManager,
@@ -428,6 +431,7 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
         mWallpaperManager = wallpaperManager;
         mUserTracker = userTracker;
         mResources = resources;
+        mSystemSettings = systemSettings;
         mWakefulnessLifecycle = wakefulnessLifecycle;
         mConfigurationController = configurationController;
         mConfigurationController.addCallback(mConfigurationListener);
@@ -503,6 +507,48 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
         if (!mIsMonetEnabled) {
             return;
         }
+
+        mSystemSettings.registerContentObserverForUser(
+                Settings.System.getUriFor(Settings.System.QS_TILE_VERTICAL_LAYOUT),
+                false,
+                new ContentObserver(mBgHandler) {
+                    @Override
+                    public void onChange(boolean selfChange, Collection<Uri> collection, int flags,
+                            int userId) {
+                        if (DEBUG) Log.d(TAG, "Overlay changed for user: " + userId);
+                        if (mUserTracker.getUserId() != userId) {
+                            return;
+                        }
+                        if (!mDeviceProvisionedController.isUserSetup(userId)) {
+                            Log.i(TAG, "Theme application deferred when setting changed.");
+                            mDeferredThemeEvaluation = true;
+                            return;
+                        }
+                        reevaluateSystemTheme(true /* forceReload */);
+                    }
+                },
+                UserHandle.USER_ALL);
+                
+        mSystemSettings.registerContentObserverForUser(
+                Settings.System.getUriFor(Settings.System.QS_TILE_LABEL_HIDE),
+                false,
+                new ContentObserver(mBgHandler) {
+                    @Override
+                    public void onChange(boolean selfChange, Collection<Uri> collection, int flags,
+                            int userId) {
+                        if (DEBUG) Log.d(TAG, "Overlay changed for user: " + userId);
+                        if (mUserTracker.getUserId() != userId) {
+                            return;
+                        }
+                        if (!mDeviceProvisionedController.isUserSetup(userId)) {
+                            Log.i(TAG, "Theme application deferred when setting changed.");
+                            mDeferredThemeEvaluation = true;
+                            return;
+                        }
+                        reevaluateSystemTheme(true /* forceReload */);
+                    }
+                },
+                UserHandle.USER_ALL);
 
         mUserTracker.addCallback(mUserTrackerCallback, mMainExecutor);
 
