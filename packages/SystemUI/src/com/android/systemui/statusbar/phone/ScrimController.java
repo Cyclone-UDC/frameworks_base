@@ -1504,6 +1504,12 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
             state.setSurfaceColor(surface);
         }
 
+        int surface = Utils.getColorAttr(mScrimBehind.getContext(),
+                com.android.internal.R.attr.materialColorSurface).getDefaultColor();
+        for (ScrimState state : ScrimState.values()) {
+            state.setSurfaceColor(surface);
+        }
+
         mNeedsDrawableColorUpdate = true;
     }
 
