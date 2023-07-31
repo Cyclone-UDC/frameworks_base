@@ -7441,5 +7441,8 @@ message MetricsEvent {
 
     // CUSTOM Metrics
     CUSTOM = 2772;
+    
+    // CYCLONE Constant
+    CYCLONE = 5884;
   }
 }
